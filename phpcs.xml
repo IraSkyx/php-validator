@@ -1,0 +1,14 @@
+<?xml version="1.0" ?>
+<ruleset name="aubind97">
+  <description>
+    Standard format php following PSR-2.
+  </description>
+  <!-- Show progression-->
+  <arg value="p" />
+  <!-- Enable color -->
+  <arg name="colors"/>
+  <!-- FWatching files-->
+  <file>src</file>
+  <!-- PSR 2 standard -->
+  <rule ref="PSR2"></rule>
+</ruleset>
