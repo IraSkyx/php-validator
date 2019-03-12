@@ -27,12 +27,15 @@ class ValidatorError
         'datetime' => "'%s' must be a date with the format '%s'",
         'email' => "'%s' must be a valide email",
         'empty' => "'%s' could not be empty",
+        'exists' => "'%s' should exists in '%s' table",
         'filetype' => "'%s' must be a file with the folowing extensions %s",
         'maxLength' => "'%s' must be shorter than %d characters",
         'minLength' => "'%s' must be longer than %d characters",
         'money' => "'%s' must be money format",
         'numeric' => "'%s' must be a number",
         'required' => "'%s is required",
+        'slug' => "'%s' must be a slug",
+        'unique' => "'%s' should be unique but '%s' is already used",
         'uploaded' => "'%s' must contain an file"
     ];
 

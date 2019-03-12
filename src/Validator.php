@@ -24,13 +24,21 @@ class Validator
     private $params = [];
 
     /**
+     * @var bool use only available params
+     */
+    private $valid_available_param;
+
+    /**
      * Validator Constructor
      *
      * @param array $params params ou want to validate
      * @param array $filter filter of params you need
+     * @param bool $valid_available_param true: use only validation on available params
      */
-    public function __construct(array $params = [], array $filter = null)
+    public function __construct(array $params = [], array $filter = null, bool $valid_available_param = false)
     {
+        $this->valid_available_param = $valid_available_param;
+
         if (is_null($filter)) {
             $this->params = $params;
         } else {
@@ -38,6 +46,25 @@ class Validator
                 return in_array($key, $filter);
             }, ARRAY_FILTER_USE_KEY);
         }
+    }
+
+    /**
+     * Check if the requested param is required
+     * > must not be used for a validation pre-configuration
+     *
+     * @param string ...$keys list of all required params
+     * @return self
+     */
+    public function required(string ...$keys) : self
+    {
+        foreach ($keys as $key) {
+            $value = $this->getValue($key);
+
+            if (is_null($value))
+                $this->addError($key, 'required');
+        }
+
+        return $this;
     }
 
     /**
@@ -49,12 +76,16 @@ class Validator
      */
     public function dateTime(string $key, string $format = 'Y-m-d H:i:s') : self
     {
+        if ($this->isNeededValidation($key))
+            return $this;
+
         $value = $this->getValue($key);
+
         $date = \DateTime::createFromFormat($format, $value);
         $error = \DateTime::getLastErrors();
-        if ($error['error_count'] > 0 || $error['warning_count'] > 0 || $date === false) {
+        if ($error['error_count'] > 0 || $error['warning_count'] > 0 || $date === false)
             $this->addError($key, 'datetime', [$format]);
-        }
+
         return $this;
     }
 
@@ -66,11 +97,13 @@ class Validator
      */
     public function email(string $key) : self
     {
+        if ($this->isNeededValidation($key))
+            return $this;
+
         $value = $this->getValue($key);
 
-        if (filter_var($value, FILTER_VALIDATE_EMAIL) === false) {
+        if (filter_var($value, FILTER_VALIDATE_EMAIL) === false)
             $this->addError($key, 'email');
-        }
 
         return $this;
     }
@@ -105,6 +138,9 @@ class Validator
      */
     public function extension(string $key, array $extensions) : self
     {
+        if ($this->isNeededValidation($key))
+            return $this;
+
         /** @var UploadedFileInterface $file */
         $file = $this->getValue($key);
 
@@ -130,7 +166,11 @@ class Validator
      */
     public function length(string $key, ?int $min, ?int $max = null) : self
     {
+        if ($this->isNeededValidation($key))
+            return $this;
+
         $value = $this->getValue($key);
+
         $length = mb_strlen($value);
 
         if (!is_null($min) &&
@@ -141,17 +181,11 @@ class Validator
             return $this;
         }
 
-        if (!is_null($min) &&
-            $length < $min
-        ) {
+        if (!is_null($min) && $length < $min)
             $this->addError($key, 'minLength', [$min]);
-        }
 
-        if (!is_null($max) &&
-            $length > $max
-        ) {
+        if (!is_null($max) && $length > $max)
             $this->addError($key, 'maxLength', [$max]);
-        }
 
         return $this;
     }
@@ -164,7 +198,11 @@ class Validator
      */
     public function money(string $key) : self
     {
+        if ($this->isNeededValidation($key))
+            return $this;
+
         $value = $this->getValue($key);
+
         $pattern = '/^[0-9]*((.|,)[0-9]{1,2})?$/';
 
         if (!is_null($value) && !preg_match($pattern, $value))
@@ -182,6 +220,9 @@ class Validator
     public function notEmpty(string ...$keys) : self
     {
         foreach ($keys as $key) {
+            if ($this->isNeededValidation($key))
+                continue;
+
             $value = $this->getValue($key);
 
             if (is_null($value) || empty($value))
@@ -199,46 +240,55 @@ class Validator
      */
     public function numeric(string $key) : self
     {
+        if ($this->isNeededValidation($key))
+            return $this;
+
         $value = $this->getValue($key);
 
-        if (!is_numeric($value)) {
+        if (!is_numeric($value))
             $this->addError($key, 'numeric');
-        }
 
         return $this;
     }
 
     /**
-     * Check if the requested param is required
-     *
-     * @param string ...$keys list of all required params
+     * Check is the requested param is a slug
+     * @param string $key aram you want to validate
      * @return self
      */
-    public function required(string ...$keys) : self
+    public function slug(string $key) : self
     {
-        foreach ($keys as $key) {
-            $value = $this->getValue($key);
+        if ($this->isNeededValidation($key))
+            return $this;
 
-            if (is_null($value))
-                $this->addError($key, 'required');
-        }
+        $value = $this->getValue($key);
+
+        $pattern = '/^[a-z0-9]+(-?[a-z0-9]+)*$/';
+        if (!is_null($value) && !preg_match($pattern, $value))
+            $this->addError($key, 'slug');
 
         return $this;
     }
+
 
     /**
      * Check if the requested param will be unique on the table requested
      *
      * @param string $key param you want to validate
+     * @param string $column column where you check
      * @param string $table table where you check
      * @param \PDO $pdo database connexion
-     * @param integer|null $exclude
+     * @param integer|null $exclude id you want to exclude
      * @return self
      */
-    public function unique(string $key, string $table, \PDO $pdo , ?int $exclude = null) : self
+    public function unique(string $key, string $column, string $table, \PDO $pdo , ?int $exclude = null) : self
     {
+        if ($this->isNeededValidation($key))
+            return $this;
+
         $value = $this->getValue($key);
-        $query = "SELECT id FROM $table WHERE $key = ?";
+
+        $query = "SELECT id FROM $table WHERE $column = ?";
         $params = [$value];
 
         if ($exclude !== null) {
@@ -263,6 +313,9 @@ class Validator
      */
     public function uploaded(string $key) : self
     {
+        if ($this->isNeededValidation($key))
+            return $this;
+
         /** @var UploadedFileInterface $file */
         $file = $this->getValue($key);
 
@@ -321,10 +374,21 @@ class Validator
      */
     private function getValue(string $key)
     {
-        if (array_key_exists($key, $this->params)) {
+        if (array_key_exists($key, $this->params))
             return $this->params[$key];
-        }
+
         return null;
+    }
+
+    /**
+     * Return if the key  exists and need to be validate
+     *
+     * @param string $key param name
+     * @return boolean
+     */
+    private function isNeededValidation(string $key) : bool
+    {
+        return !array_key_exists($key, $this->params) && $this->valid_available_param;
     }
 
     /**
