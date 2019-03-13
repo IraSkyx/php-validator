@@ -2,7 +2,7 @@
 
 **php-validator** is a package to provide a validation  
 
-<!-- Build status -->
+[![Build Status](https://travis-ci.org/Aubind97/php-validator.png?branch=master)](https://travis-ci.org/Aubind97/php-validator)
 
 # 📖 Documentation
 ## 💿 Installation
