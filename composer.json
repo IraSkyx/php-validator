@@ -1,6 +1,7 @@
 {
     "name": "aubind97/php-validator",
     "description": "A PHP Validator",
+    "type": "Library",
     "keywords": ["validator","validation","framework"],
     "license": "MIT",
     "authors": [
