@@ -10,7 +10,9 @@ class Validator
      */
     private const MIME_TYPES = [
         'jpg' => 'image/jpeg',
-        'png' => 'image/png'
+        'png' => 'image/png',
+        'svg' => 'image/svg+xml',
+        'gif' => 'image/gif',
     ];
 
     /**
