@@ -12,7 +12,7 @@ class Validator
         'jpg' => 'image/jpeg',
         'png' => 'image/png',
         'svg' => 'image/svg+xml',
-        'gif' => 'image/gif'
+        'gif' => 'image/gif',
     ];
 
     /**
