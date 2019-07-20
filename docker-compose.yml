@@ -1,0 +1,15 @@
+version: '3.3'
+services:
+  php-validator:
+    image: thecodingmachine/php:7.3-v2-cli
+    container_name: aubind97-php-validator
+    stdin_open: true
+    tty: true
+    environment:
+      PHP_EXTENSION_XDEBUG: 1
+      PHP_INI_XDEBUG__REMOTE_AUTOSTART: 1
+      STARTUP_COMMAND_1: composer install
+    working_dir: /usr/php-validator
+    volumes:
+      - ./:/usr/php-validator
+    command: /bin/sh

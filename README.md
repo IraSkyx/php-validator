@@ -1,6 +1,6 @@
 # PHP Validator ✔️
 
-**php-validator** is a package to provide a validation  
+**php-validator** is a package to provide server-side validations  
 
 [![Build Status](https://travis-ci.org/Aubind97/php-validator.png?branch=master)](https://travis-ci.org/Aubind97/php-validator)
 
@@ -19,7 +19,7 @@ Or you can add the following input in your `composer.json` file.
 ```
 ## 📚 Usage
 > Make sure to use `composer` autoloading to load the package  
-> Be sure to add the `use` statment or add the namespace before `Validator`
+> Be sure to add the `use` statement or add the namespace before `Validator`
 
 Using **php-validator** in your projet is super simple, here is an example
 ```php
@@ -30,9 +30,9 @@ $validator = (new Validator($_POST))
   ->length('nickname', 2, 100)
   ->required('email', 'firstname', 'lastname');
 ```
-> here we validate `$_POST` but you can use any array
+> We can validate `$_POST` or any other arrays
 
-After the validation you can check if it's valid like this
+Then, you can check for validation like this
 ```php
 $validator->isValid();
 ```
@@ -42,19 +42,31 @@ If there are errors, you can get errors messages with
 $validator->getErrors();
 ```
 
+Optionnally, you can pass an associative array for parameters internationalization. The key is the attribute name you passed in the Validator constructor, the value is the translation (FR example below).
+```php
+$validator->getErrors([
+  'firstname' => 'prénom'
+]);
+```
+
 ### Advanced features
-You can add a filter at the validator creation, to discard not needed agruments
+You can add a filter at the validator creation, to discard not needed arguments
 ```php
 $validator = new Validator($_POST, ['firstname', 'lastname']);
 ```
 
-You can also create validator with many rules, to validate all params of a model for instance, and apply rules only is the params is in the array params give at the construction
+You can also create validator with many rules, to validate all params of a model for instance, and apply rules only is the params are in the array params given at the construction
 ```php
-$validator = new Validatro($_POST, ['firstname', 'lastname'], true);
+$validator = new Validator($_POST, ['firstname', 'lastname'], true);
+```
+
+Finally, you can pass IETF locale for internationalization (currently supports en-US, fr-FR)
+```php
+$validator = new Validator($_POST, ['firstname', 'lastname'], true, 'fr-FR');
 ```
 
 ## 📏 Available rules
-Here is the list of all availables validation rules
+Here is the list of all available validation rules
 ### `required`
 Check if the requested params are given
 ```php
@@ -62,7 +74,7 @@ $validator->required('key')
 $validator->required('key1', 'key2')
 ```
 ### `dateTime`
-Check if the requested param if a date that follow the specified format
+Check if the requested param is a date that follow the specified format
 ```php
 $validator->dateTime('key') // Default format 'Y-m-d H:i:s'
 $validator->dateTime('key', 'Y-m-d')
@@ -119,7 +131,7 @@ $validator->unique('key', 'column', 'table', $pdo) // $pdo is a \PDO connection
 $validator->unique('key', 'column', 'table', $pdo, 1)
 ```
 ### `uploaded`
-Check if the requested param is upload without errros
+Check if the requested param is uploaded without errors
 ```php
 $validator->('key')
 ```
@@ -127,4 +139,4 @@ $validator->('key')
 ## 🤝 Contributions
 This repository is maintained by @aubind97  
 
-> If you want to improve the system i'd love to merge your PR
+> If you want to improve the system I'd love to merge your PR.
