@@ -2,10 +2,13 @@
 
 namespace Aubind97;
 
+use Gettext\Translator;
+use Gettext\Translations;
+
 class ValidatorError
 {
     /**
-     * @var string param wich cause the error
+     * @var string param which causes the error
      */
     private $key;
 
@@ -20,37 +23,55 @@ class ValidatorError
     private $attributes;
 
     /**
-     * @var string[] $messages array of messages
+     * @var Translator translator for translations
      */
-    private $messages = [
-        'betweenLength' => "%s must have a length between %d and %d characters",
-        'datetime' => "%s must be a date with the format '%s'",
-        'email' => "%s must be a valide email",
-        'empty' => "%s could not be empty",
-        'exists' => "%s should exists in '%s' table",
-        'filetype' => "%s must be a file with the folowing extensions %s",
-        'maxLength' => "%s must be shorter than %d characters",
-        'minLength' => "%s must be longer than %d characters",
-        'money' => "%s must be money format",
-        'numeric' => "%s must be a number",
-        'required' => "%s is required",
-        'slug' => "%s must be a slug",
-        'unique' => "%s should be unique but '%s' is already used",
-        'uploaded' => "%s must contain an file"
-    ];
+    private $translator;
 
     /**
-     * ValidatorError constuctor
+     * ValidatorError constructor
      *
-     * @param string $key param wich cause the error
+     * @param string $key param which causes the error
      * @param string $rule message name
      * @param array $attributes attibutes to complete the error message
+     * @param string $locale Language in which the error messages should be translated
      */
-    public function __construct(string $key, string $rule, array $attributes = [])
+    public function __construct(string $key, string $rule, array $attributes = [], string $locale = "en-US")
     {
         $this->key = $key;
         $this->rule = $rule;
         $this->attributes = $attributes;
+        $this->locale = $locale;
+        $this->setTranslator(new Translator());
+    }
+
+    /**
+     * Translator setter
+     *
+     * @return ValidatorError
+     */
+    public function setTranslator($translator){
+        $this->translator = $translator;
+        $this->translator->loadTranslations(Translations::fromPoFile(__DIR__ . '/../locale/' . $this->locale . '/messages.po'));
+        return $this;
+    }
+
+    /**
+     * Key getter
+     *
+     * @return string
+     */
+    public function getKey() : string {
+        return $this->key;
+    }
+
+    /**
+     * ValidatorError clone but with key change
+     *
+     * @param string $key param which causes the error
+     * @return ValidatorError
+     */
+    public function changeKey(string $key) {
+        return (new ValidatorError($key, $this->rule, $this->attributes, $this->locale))->setTranslator($this->translator);
     }
 
     /**
@@ -61,7 +82,7 @@ class ValidatorError
     public function __toString()
     {
         $params = array_merge(
-            [$this->messages[$this->rule], $this->key],
+            [$this->translator->gettext($this->rule), $this->key],
             $this->attributes
         );
 

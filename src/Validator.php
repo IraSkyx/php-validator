@@ -37,9 +37,10 @@ class Validator
      * @param array $filter filter of params you need
      * @param bool $valid_available_param true: use only validation on available params
      */
-    public function __construct(array $params = [], array $filter = null, bool $valid_available_param = false)
+    public function __construct(array $params = [], array $filter = null, bool $valid_available_param = false, string $locale = 'en-US')
     {
         $this->valid_available_param = $valid_available_param;
+        $this->locale = $locale;
 
         if (is_null($filter)) {
             $this->params = $params;
@@ -150,10 +151,9 @@ class Validator
             return $this;
         }
 
-        /** @var UploadedFileInterface $file */
         $file = $this->getValue($key);
 
-        if ($file !== null && $file->getError() === UPLOAD_ERR_OK) {
+        if($this->isValidUpload($file)) {
             $type = $file->getClientMediaType();
             $extension = strtolower(pathinfo($file->getClientFilename(), PATHINFO_EXTENSION));
             $expectedType = self::MIME_TYPES[$extension] ?? null;
@@ -340,10 +340,9 @@ class Validator
             return $this;
         }
 
-        /** @var UploadedFileInterface $file */
         $file = $this->getValue($key);
 
-        if ($file === null || $file->getError() !== UPLOAD_ERR_OK) {
+        if(!$this->isValidUpload($file)) {
             $this->addError($key, 'uploaded');
         }
 
@@ -365,9 +364,13 @@ class Validator
      *
      * @return ValidationError[] errors messages
      */
-    public function getErrors() : array
+    public function getErrors(array $localization_map = []) : array
     {
-        return $this->errors;
+        return array_map(function($error) use ($localization_map) {
+            return $error->changeKey($localization_map[$error->getKey()]);
+        }, array_filter($this->errors, function($error) use($localization_map) {
+            return in_array($error->getKey(), array_keys($localization_map));
+        }));
     }
 
     /**
@@ -407,7 +410,7 @@ class Validator
     }
 
     /**
-     * Return if the key  exists and need to be validate
+     * Return if the key exists and need to be validate
      *
      * @param string $key param name
      * @return boolean
@@ -415,6 +418,32 @@ class Validator
     private function isNeededValidation(string $key) : bool
     {
         return !array_key_exists($key, $this->params) && $this->valid_available_param;
+    }
+
+    /**
+     * Return if the file is a valid upload or not 
+     *
+     * @param any $file param file
+     * @return boolean
+     */
+    private function isValidUpload($file) : bool {
+        return (
+            isset($file)
+            && is_object($file)
+            && (
+                (
+                    property_exists($file, "tmp_name")
+                    && file_exists($file->tmp_name) 
+                    && is_uploaded_file($file->tmp_name) 
+                )
+                || (
+                    property_exists($file, "file")
+                    && file_exists($file->file) 
+                    && is_uploaded_file($file->file) 
+                )
+            )
+            && $file->getError() === UPLOAD_ERR_OK 
+        );
     }
 
     /**
@@ -427,6 +456,6 @@ class Validator
      */
     private function addError(string $key, string $rule, array $attributes = []) : void
     {
-        $this->errors[$key] = new ValidatorError($key, $rule, $attributes);
+        $this->errors[$key] = new ValidatorError($key, $rule, $attributes, $this->locale);
     }
 }

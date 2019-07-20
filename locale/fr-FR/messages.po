@@ -1,0 +1,41 @@
+msgid "betweenLength"
+msgstr "%s doit faire entre %d et %d caractères"
+
+msgid "datetime"
+msgstr "%s doit être une date au format %s"
+
+msgid "email"
+msgstr "%s doit être un email valide"
+
+msgid "empty"
+msgstr "%s ne peut être vide"
+
+msgid "exists"
+msgstr "%s doit exister dans la table %s"
+
+msgid "filetype"
+msgstr "%s doit être un fichier avec l'extension %s"
+
+msgid "maxLength"
+msgstr "%s doit faire moins de %d caractères"
+
+msgid "minLength"
+msgstr "%s doit faire plus de %d caractères"
+
+msgid "money"
+msgstr "%s doit être au format monnaie"
+
+msgid "numeric"
+msgstr "%s doit être un nombre"
+
+msgid "required"
+msgstr "%s est requis"
+
+msgid "slug"
+msgstr "%s doit être un slug"
+
+msgid "unique"
+msgstr "%s doit être unique mais %s est déjà utilisé"
+
+msgid "uploaded"
+msgstr "%s doit contenir un fichier"
