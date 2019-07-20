@@ -364,13 +364,16 @@ class Validator
      *
      * @return ValidationError[] errors messages
      */
-    public function getErrors(array $localization_map = []) : array
+    public function getErrors(?array $localization_map = null) : array
     {
-        return array_map(function($error) use ($localization_map) {
-            return $error->changeKey($localization_map[$error->getKey()]);
-        }, array_filter($this->errors, function($error) use($localization_map) {
-            return in_array($error->getKey(), array_keys($localization_map));
-        }));
+        if ($localization_map)
+            return array_map(function($error) use ($localization_map) {
+                return $error->changeKey($localization_map[$error->getKey()]);
+            }, array_filter($this->errors, function($error) use ($localization_map) {
+                return in_array($error->getKey(), array_keys($localization_map));
+            }));
+        else
+            return $this->errors;
     }
 
     /**
@@ -421,7 +424,7 @@ class Validator
     }
 
     /**
-     * Return if the file is a valid upload or not 
+     * Return if the file is a valid upload or not
      *
      * @param any $file param file
      * @return boolean
@@ -433,16 +436,16 @@ class Validator
             && (
                 (
                     property_exists($file, "tmp_name")
-                    && file_exists($file->tmp_name) 
-                    && is_uploaded_file($file->tmp_name) 
+                    && file_exists($file->tmp_name)
+                    && is_uploaded_file($file->tmp_name)
                 )
                 || (
                     property_exists($file, "file")
-                    && file_exists($file->file) 
-                    && is_uploaded_file($file->file) 
+                    && file_exists($file->file)
+                    && is_uploaded_file($file->file)
                 )
             )
-            && $file->getError() === UPLOAD_ERR_OK 
+            && $file->getError() === UPLOAD_ERR_OK
         );
     }
 
