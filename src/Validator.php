@@ -163,6 +163,57 @@ class Validator
             }
         }
 
+        $this->maxSize($key, $this->getMaxUploadedFileSize());
+
+        return $this;
+    }
+
+    /**
+    * Get max uploaded file size
+    * 
+    * @return int The value in bytes
+    */
+    function getMaxUploadedFileSize() : int
+    {
+        $size = ini_get('upload_max_filesize');   
+        $suffix = strtoupper(substr($size, -1));
+        $size = intval($size);
+
+        if (!in_array($suffix, array('P','T','G','M','K')))
+            return $size;  
+
+        switch ($suffix) {
+            case 'P': $size *= 1024;
+            case 'T': $size *= 1024;
+            case 'G': $size *= 1024;
+            case 'M': $size *= 1024;
+            case 'K': $size *= 1024; break;
+        }
+        return $size;
+    }      
+
+    /**
+     * Check if the requested param has a lower size than the maxSize
+     *
+     * @param string $key param you want to validate
+     * @param int $maxSize max file size in bytes
+     * @return self
+     */
+    public function maxSize(string $key, int $maxSize) : self
+    {
+        if ($this->isNeededValidation($key)) {
+            return $this;
+        }
+
+        $file = $this->getValue($key);
+
+        if($file->getError() === UPLOAD_ERR_FORM_SIZE || $file->getSize() > $maxSize || $file->getSize() === 0) {
+            $this->addError($key, 'maxSize', [$maxSize]);
+        }
+        else if($file->getError() === UPLOAD_ERR_INI_SIZE) {
+            $this->addError($key, 'maxSize', [$this->getMaxUploadedFileSize()]);
+        }
+
         return $this;
     }
 
@@ -290,7 +341,6 @@ class Validator
 
         return $this;
     }
-
 
     /**
      * Check if the requested param will be unique on the table requested
@@ -430,6 +480,8 @@ class Validator
      * @return boolean
      */
     private function isValidUpload($file) : bool {
+        return true;
+
         return (
             isset($file)
             && is_object($file)

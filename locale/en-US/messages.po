@@ -39,3 +39,6 @@ msgstr "%s should be unique but %s is already used"
 
 msgid "uploaded"
 msgstr "%s must contain a file"
+
+msgid "maxSize"
+msgstr "%s file size should be lower than %s bytes"
