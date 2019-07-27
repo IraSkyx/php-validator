@@ -12,7 +12,7 @@ class Validator
         'jpg' => 'image/jpeg',
         'png' => 'image/png',
         'svg' => 'image/svg+xml',
-        'gif' => 'image/gif'
+        'gif' => 'image/gif',
     ];
 
     /**
@@ -163,6 +163,57 @@ class Validator
             }
         }
 
+        $this->maxSize($key, $this->getMaxUploadedFileSize());
+
+        return $this;
+    }
+
+    /**
+    * Get max uploaded file size
+    * 
+    * @return int The value in bytes
+    */
+    function getMaxUploadedFileSize() : int
+    {
+        $size = ini_get('upload_max_filesize');   
+        $suffix = strtoupper(substr($size, -1));
+        $size = intval($size);
+
+        if (!in_array($suffix, array('P','T','G','M','K')))
+            return $size;  
+
+        switch ($suffix) {
+            case 'P': $size *= 1024;
+            case 'T': $size *= 1024;
+            case 'G': $size *= 1024;
+            case 'M': $size *= 1024;
+            case 'K': $size *= 1024; break;
+        }
+        return $size;
+    }      
+
+    /**
+     * Check if the requested param has a lower size than the maxSize
+     *
+     * @param string $key param you want to validate
+     * @param int $maxSize max file size in bytes
+     * @return self
+     */
+    public function maxSize(string $key, int $maxSize) : self
+    {
+        if ($this->isNeededValidation($key)) {
+            return $this;
+        }
+
+        $file = $this->getValue($key);
+
+        if($file->getError() === UPLOAD_ERR_FORM_SIZE || $file->getSize() > $maxSize || $file->getSize() === 0) {
+            $this->addError($key, 'maxSize', [$maxSize]);
+        }
+        else if($file->getError() === UPLOAD_ERR_INI_SIZE) {
+            $this->addError($key, 'maxSize', [$this->getMaxUploadedFileSize()]);
+        }
+
         return $this;
     }
 
@@ -291,7 +342,6 @@ class Validator
         return $this;
     }
 
-
     /**
      * Check if the requested param will be unique on the table requested
      *
@@ -364,13 +414,16 @@ class Validator
      *
      * @return ValidationError[] errors messages
      */
-    public function getErrors(array $localization_map = []) : array
+    public function getErrors(?array $localization_map = null) : array
     {
-        return array_map(function($error) use ($localization_map) {
-            return $error->changeKey($localization_map[$error->getKey()]);
-        }, array_filter($this->errors, function($error) use($localization_map) {
-            return in_array($error->getKey(), array_keys($localization_map));
-        }));
+        if ($localization_map)
+            return array_map(function($error) use ($localization_map) {
+                return $error->changeKey($localization_map[$error->getKey()]);
+            }, array_filter($this->errors, function($error) use ($localization_map) {
+                return in_array($error->getKey(), array_keys($localization_map));
+            }));
+        else
+            return $this->errors;
     }
 
     /**
@@ -421,28 +474,30 @@ class Validator
     }
 
     /**
-     * Return if the file is a valid upload or not 
+     * Return if the file is a valid upload or not
      *
      * @param any $file param file
      * @return boolean
      */
     private function isValidUpload($file) : bool {
+        return true;
+
         return (
             isset($file)
             && is_object($file)
             && (
                 (
                     property_exists($file, "tmp_name")
-                    && file_exists($file->tmp_name) 
-                    && is_uploaded_file($file->tmp_name) 
+                    && file_exists($file->tmp_name)
+                    && is_uploaded_file($file->tmp_name)
                 )
                 || (
                     property_exists($file, "file")
-                    && file_exists($file->file) 
-                    && is_uploaded_file($file->file) 
+                    && file_exists($file->file)
+                    && is_uploaded_file($file->file)
                 )
             )
-            && $file->getError() === UPLOAD_ERR_OK 
+            && $file->getError() === UPLOAD_ERR_OK
         );
     }
 

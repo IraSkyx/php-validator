@@ -329,6 +329,47 @@ class ValidatorTest extends TestCase
         $this->assertFalse($validator->isValid());
     }
 
+    // Test max size file validation
+    public function testMaxSize()
+    {
+        $file = $this->getMockBuilder(UploadedFile::class)
+            ->disableOriginalConstructor()
+            ->setMethods(['getError', 'getSize'])
+            ->getMock();
+        $file->method('getSize')->willReturn(1500000);        
+        $file->method('getError')->willReturn(UPLOAD_ERR_INI_SIZE);
+
+        $file2 = $this->getMockBuilder(UploadedFile::class)
+            ->disableOriginalConstructor()
+            ->setMethods(['getError', 'getSize'])
+            ->getMock();
+        $file2->method('getSize')->willReturn(1500000);        
+        $file2->method('getError')->willReturn(UPLOAD_ERR_FORM_SIZE);
+
+        $file3 = $this->getMockBuilder(UploadedFile::class)
+            ->disableOriginalConstructor()
+            ->setMethods(['getError', 'getSize'])
+            ->getMock();
+        $file3->method('getSize')->willReturn(1000000);        
+        $file3->method('getError')->willReturn(UPLOAD_ERR_OK);
+
+        $params = [
+            'image-1' => $file,
+            'image-2' => $file2,
+            'image-3' => $file3,
+        ];
+        $validator = new Validator($params, null, true);
+        
+        $validator->maxSize('image-1', 1000000);
+        $this->assertFalse($validator->isValid());
+
+        $validator->maxSize('image-2', 1000000);
+        $this->assertFalse($validator->isValid());
+  
+        $validator->maxSize('image-3', 1000000);
+        $this->assertCount(2, $validator->getErrors());
+    }
+
     /**
      * Return a validator with the test params
      *
